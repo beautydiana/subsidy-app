@@ -2,15 +2,17 @@
 import { useState, useEffect } from 'react';
 import SwipeCard from '../SwipeCard';
 import { subsidies } from '../../data/subsidies';
+import SubsidyResults from './SubsidyResults';
 
-const SubsidySwiper = () => {
-  const [currentSubsidies, setCurrentSubsidies] = useState(subsidies || []);
+const SubsidySwiper = ({ filteredSubsidies, userProfile }) => {
+  const [currentSubsidies, setCurrentSubsidies] = useState(filteredSubsidies || subsidies || []);
   const [likedSubsidies, setLikedSubsidies] = useState([]);
   const [viewedSubsidies, setViewedSubsidies] = useState([]);
+  const [showResults, setShowResults] = useState(false);
   
   useEffect(() => {
-    console.log('subsidies data:', subsidies); // データの存在確認
-  }, []);
+    console.log('subsidies data:', currentSubsidies); // データの存在確認
+  }, [currentSubsidies]);
 
   const handleSwipe = (direction, subsidyId) => {
     // 現在の表示中の補助金から、スワイプされた補助金を削除
@@ -19,7 +21,7 @@ const SubsidySwiper = () => {
     // スワイプ方向に応じて処理
     if (direction === 'right') {
       // 「興味あり」としてライクリストに追加
-      const likedSubsidy = subsidies.find(subsidy => subsidy.id === subsidyId);
+      const likedSubsidy = (filteredSubsidies || subsidies).find(subsidy => subsidy.id === subsidyId);
       setLikedSubsidies(prev => [...prev, likedSubsidy]);
     }
     
@@ -27,34 +29,9 @@ const SubsidySwiper = () => {
     setViewedSubsidies(prev => [...prev, subsidyId]);
   };
 
-  // すべての補助金をスワイプし終わった場合のメッセージ
-  if (currentSubsidies.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center p-6 min-h-[70vh] text-center">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">すべての補助金をチェックしました！</h2>
-        <p className="text-gray-600 mb-6">あなたに合った補助金が見つかりましたか？</p>
-        
-        {likedSubsidies.length > 0 ? (
-          <div className="bg-white rounded-xl shadow p-4 w-full max-w-sm mb-4">
-            <h3 className="font-semibold text-gray-900 mb-2">興味を持った補助金: {likedSubsidies.length}件</h3>
-            <ul className="text-left text-sm text-gray-600">
-              {likedSubsidies.map(subsidy => (
-                <li key={subsidy.id} className="py-1">・{subsidy.title}</li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="text-gray-500 italic mb-4">興味を持った補助金はありませんでした</p>
-        )}
-        
-        <button 
-          onClick={() => setCurrentSubsidies(subsidies)}
-          className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-full font-medium transition-colors"
-        >
-          もう一度チェックする
-        </button>
-      </div>
-    );
+  // すべての補助金をスワイプし終わった場合は結果表示
+  if (currentSubsidies.length === 0 || showResults) {
+    return <SubsidyResults likedSubsidies={likedSubsidies} userProfile={userProfile} />;
   }
 
   return (
@@ -77,7 +54,7 @@ const SubsidySwiper = () => {
         {/* 進捗状況 */}
         <div className="absolute -bottom-10 w-full text-center">
           <p className="text-xs text-gray-500">
-            {viewedSubsidies.length} / {subsidies.length} 件チェック済み
+            {viewedSubsidies.length} / {(filteredSubsidies || subsidies).length} 件チェック済み
           </p>
         </div>
       </div>

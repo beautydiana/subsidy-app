@@ -1,12 +1,15 @@
 "use client"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function SubsidyApp() {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState({})
+  const [direction, setDirection] = useState(0)
+  const startY = useRef(0)
 
   const questions = [
     { key: "child", text: "お子さんはいらっしゃいますか？" },
@@ -14,6 +17,47 @@ export default function SubsidyApp() {
     { key: "job", text: "今、お仕事はされていますか？" },
     { key: "area", text: "お住まいの地域はどちらですか？", type: "select", options: ["東京都", "大阪府", "愛知県", "福岡県", "その他"] }
   ]
+
+  // スワイプ関連の関数
+  const handleTouchStart = (e) => {
+    startY.current = e.touches[0].clientY;
+  };
+  
+  const handleTouchMove = (e) => {
+    const currentY = e.touches[0].clientY;
+    const diff = startY.current - currentY;
+    
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && step < questions.length - 1) {
+        setDirection(1); // 上にスワイプ
+      } else if (diff < 0 && step > 0) {
+        setDirection(-1); // 下にスワイプ
+      }
+    }
+  };
+  
+  const handleTouchEnd = () => {
+    if (direction === 1) {
+      handleSkip();
+    } else if (direction === -1) {
+      goToPreviousQuestion();
+    }
+    setDirection(0);
+  };
+  
+  // 前の質問へ
+  const goToPreviousQuestion = () => {
+    if (step > 0) {
+      setStep(step - 1);
+    }
+  };
+  
+  // スキップ機能
+  const handleSkip = () => {
+    if (step < questions.length) {
+      setStep(step + 1);
+    }
+  };
 
   const handleAnswer = (value) => {
     setAnswers({ ...answers, [questions[step].key]: value })
@@ -23,12 +67,13 @@ export default function SubsidyApp() {
   const renderQuestion = () => {
     const question = questions[step]
     return (
-      <div 
+      <motion.div 
         key={step} 
-        className="text-center animate-fadeIn"
-        style={{
-          animation: "fadeIn 0.3s ease-in-out",
-        }}
+        initial={{ opacity: 0, y: direction > 0 ? 100 : -100 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: direction > 0 ? -100 : 100 }}
+        transition={{ duration: 0.3 }}
+        className="text-center"
       >
         <h2 className="text-xl font-bold mb-4">{question.text}</h2>
         
@@ -60,7 +105,7 @@ export default function SubsidyApp() {
             <Button onClick={() => handleAnswer("いいえ")} className="w-24">いいえ</Button>
           </div>
         )}
-      </div>
+      </motion.div>
     )
   }
 
@@ -86,11 +131,11 @@ export default function SubsidyApp() {
     }
 
     return (
-      <div
-        className="text-center animate-fadeIn"
-        style={{
-          animation: "fadeIn 0.3s ease-in-out",
-        }}
+      <motion.div
+        initial={{ opacity: 0, y: 100 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="text-center"
       >
         <h2 className="text-2xl font-bold mb-4">あなたがもらえるかもしれない補助金</h2>
         
@@ -130,12 +175,17 @@ export default function SubsidyApp() {
             もう一度やり直す
           </Button>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
+    <div 
+      className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <Card className="w-full max-w-xl shadow-lg">
         <CardContent className="p-6">
           <h1 className="text-3xl font-bold text-center mb-6 text-green-600">
@@ -148,7 +198,9 @@ export default function SubsidyApp() {
                 <span className="text-sm text-gray-500">質問 {step + 1}/{questions.length}</span>
                 <span className="text-sm text-gray-500">簡単4ステップ</span>
               </div>
-              {renderQuestion()}
+              <AnimatePresence mode="wait">
+                {renderQuestion()}
+              </AnimatePresence>
             </div>
           ) : (
             renderResult()
@@ -157,13 +209,26 @@ export default function SubsidyApp() {
       </Card>
       
       {step < questions.length && (
-        <button 
-          onClick={() => setStep(step + 1)} 
-          className="mt-4 text-sm text-gray-500 underline"
-        >
-          この質問をスキップ
-        </button>
+        <div className="mt-4 flex items-center">
+          <button 
+            onClick={goToPreviousQuestion} 
+            className="text-sm text-gray-500 underline mr-4"
+            disabled={step === 0}
+          >
+            前に戻る
+          </button>
+          <button 
+            onClick={handleSkip} 
+            className="text-sm text-gray-500 underline"
+          >
+            この質問をスキップ
+          </button>
+        </div>
       )}
+      
+      <p className="mt-2 text-center text-gray-500 text-sm">
+        ↑↓ スワイプでも質問を切り替えられます
+      </p>
       
       <p className="mt-8 text-xs text-gray-400 text-center max-w-md">
         ※このサイトは補助金の受給を保証するものではありません。詳細は各自治体にお問い合わせください。
