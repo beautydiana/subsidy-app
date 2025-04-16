@@ -1,0 +1,37 @@
+.bubbleContainer {
+    position: relative;
+    max-width: 80%;
+    margin: 20px 0;
+  }
+  
+  .bubble {
+    position: relative;
+    padding: 15px 20px;
+    border-radius: 18px;
+    border: 2px solid;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+  }
+  
+  .pointer {
+    position: absolute;
+    bottom: -12px;
+    left: 20px;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 12px solid;
+  }
+  
+  .icon {
+    font-size: 24px;
+    margin-right: 10px;
+  }
+  
+  .message {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.4;
+  }

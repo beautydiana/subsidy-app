@@ -1,126 +1,79 @@
 'use client';
-import { useState } from 'react';
-import { motion, useAnimation } from 'framer-motion';
+import React from 'react';
+import { motion, useMotionValue, useTransform, AnimatePresence } from 'framer-motion';
+import styles from './ui/SwipeCard.module.css';
 
 const SwipeCard = ({ subsidy, onSwipe }) => {
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const controls = useAnimation();
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotate = useTransform(x, [-300, 0, 300], [-45, 0, 45]);
+  const opacity = useTransform(x, [-300, -100, 0, 100, 300], [0, 1, 1, 1, 0]);
+  
+  // 興味あり/なしのインジケーター用の透明度
+  const likeOpacity = useTransform(x, [0, 100, 300], [0, 0.8, 1]);
+  const nopeOpacity = useTransform(x, [-300, -100, 0], [1, 0.8, 0]);
 
-  // 難易度に応じたカラーを設定
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case 'easy':
-        return 'bg-green-50 border-green-200';
-      case 'medium':
-        return 'bg-yellow-50 border-yellow-200';
-      case 'hard':
-        return 'bg-red-50 border-red-200';
-      default:
-        return 'bg-blue-50 border-blue-200';
-    }
-  };
-
-  // 締切日までの残り日数を計算
-  const getDaysUntilDeadline = (deadline) => {
-    const today = new Date();
-    const deadlineDate = new Date(deadline);
-    const diffTime = deadlineDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const handleDragStart = (event, info) => {
-    setDragStart({ x: info.point.x, y: info.point.y });
-  };
-
+  // ドラッグ終了時の挙動を改善
   const handleDragEnd = (event, info) => {
-    const dragDistance = info.point.x - dragStart.x;
-    
-    // 右にスワイプ (100px以上) で「興味あり」
-    if (dragDistance > 100) {
-      controls.start({
-        x: 500,
-        opacity: 0,
-        transition: { duration: 0.5 }
-      }).then(() => {
-        onSwipe('right', subsidy.id);
-      });
-    } 
-    // 左にスワイプ (-100px以下) で「興味なし」
-    else if (dragDistance < -100) {
-      controls.start({
-        x: -500,
-        opacity: 0,
-        transition: { duration: 0.5 }
-      }).then(() => {
-        onSwipe('left', subsidy.id);
-      });
-    } 
-    // どちらでもない場合は元の位置に戻す
-    else {
-      controls.start({
-        x: 0,
-        transition: { type: 'spring', stiffness: 300, damping: 20 }
-      });
+    if (info.offset.x > 150) {
+      x.set(1000); // 画面外に飛ばす
+      onSwipe('right', subsidy);
+    } else if (info.offset.x < -150) {
+      x.set(-1000); // 画面外に飛ばす
+      onSwipe('left', subsidy);
     }
   };
-
-  const daysUntilDeadline = getDaysUntilDeadline(subsidy.deadline);
 
   return (
-    <motion.div
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      onDragStart={handleDragStart}
+    <motion.div 
+      className={styles.card}
+      style={{ 
+        x, 
+        y,
+        rotate,
+        opacity,
+      }}
+      drag={true}
+      dragElastic={0.7} // ドラッグの弾力性を高める
+      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       onDragEnd={handleDragEnd}
-      animate={controls}
-      className={`w-80 h-96 rounded-2xl shadow-lg overflow-hidden ${getDifficultyColor(subsidy.difficulty)}`}
       whileTap={{ scale: 1.05 }}
-      style={{ touchAction: 'none' }}
+      initial={{ scale: 0.95, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ x: 0, opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
-      <div className="p-5 h-full flex flex-col">
-        <div className="mb-auto">
-          <h2 className="text-xl font-bold text-gray-800 mb-2">{subsidy.title}</h2>
-          <p className="text-gray-600 mb-4">{subsidy.description}</p>
-          
-          <div className="bg-white bg-opacity-70 rounded-lg p-3 mb-3">
-            <p className="font-semibold text-gray-800">支給額: {subsidy.amount}</p>
+      {/* 興味あり/なしのインジケーター */}
+      <motion.div 
+        className={styles.likeIndicator} 
+        style={{ opacity: likeOpacity }}
+      >
+        興味あり!
+      </motion.div>
+      
+      <motion.div 
+        className={styles.nopeIndicator} 
+        style={{ opacity: nopeOpacity }}
+      >
+        興味なし
+      </motion.div>
+      
+      {/* 補助金情報 */}
+      <div className={styles.cardContent}>
+        <h2 className={styles.title}>{subsidy.title}</h2>
+        <p className={styles.description}>{subsidy.description}</p>
+        <div className={styles.details}>
+          <div className={styles.detailItem}>
+            <span className={styles.label}>補助額:</span> 
+            <span className={styles.value}>{subsidy.amount}</span>
           </div>
-          
-          {subsidy.tags && subsidy.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3">
-              {subsidy.tags.map((tag, index) => (
-                <span 
-                  key={index}
-                  className="bg-white bg-opacity-70 text-gray-700 text-xs px-2 py-1 rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        <div className="mt-4">
-          <div className={`p-2 rounded-lg text-center ${
-            daysUntilDeadline < 30 
-              ? 'bg-red-100 text-red-800' 
-              : 'bg-gray-100 text-gray-800'
-          }`}>
-            <p className="text-sm">
-              {daysUntilDeadline < 30 
-                ? `締切まであと${daysUntilDeadline}日！` 
-                : `締切: ${subsidy.deadline}`
-              }
-            </p>
+          <div className={styles.detailItem}>
+            <span className={styles.label}>対象:</span> 
+            <span className={styles.value}>{subsidy.eligibility}</span>
           </div>
-          
-          <div className="mt-4 text-center text-gray-500 text-xs">
-            <p>← スワイプして選択 →</p>
-            <div className="flex justify-between mt-1">
-              <span>興味なし</span>
-              <span>興味あり</span>
-            </div>
+          <div className={styles.detailItem}>
+            <span className={styles.label}>申請期限:</span> 
+            <span className={styles.value}>{subsidy.deadline}</span>
           </div>
         </div>
       </div>

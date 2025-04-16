@@ -1,6 +1,8 @@
 export const subsidies = [
+    // ビジネス向け補助金
     {
       id: 1,
+      type: 'business',
       title: "小規模事業者持続化補助金",
       description: "小規模事業者の販路開拓等の取組を支援",
       amount: "最大50万円",
@@ -17,6 +19,7 @@ export const subsidies = [
     },
     {
       id: 2,
+      type: 'business',
       title: "ものづくり補助金",
       description: "中小企業・小規模事業者の設備投資等を支援",
       amount: "最大1,000万円",
@@ -33,6 +36,7 @@ export const subsidies = [
     },
     {
       id: 3,
+      type: 'business',
       title: "IT導入補助金",
       description: "ITツール導入による業務効率化を支援",
       amount: "最大450万円",
@@ -47,52 +51,78 @@ export const subsidies = [
       applicationUrl: "https://example.com/subsidy/3",
       tags: ["IT導入", "業務効率化", "DX"]
     },
+    
+    // プライベート向け補助金
     {
-      id: 4,
-      title: "創業助成金",
-      description: "都内で創業する中小企業者を支援",
-      amount: "最大300万円",
-      deadline: "2025-05-31",
-      difficulty: "medium",
-      requiredIndustry: null, // 全業種対応
-      maxEmployees: 10,
-      maxAnnualRevenue: 30000000, // 3000万円以下
-      minBusinessAge: 0, // 創業予定〜創業間もない
-      limitedPrefectures: ["東京都"], // 東京都限定
-      applicationSupport: true,
-      applicationUrl: "https://example.com/subsidy/4",
-      tags: ["創業", "スタートアップ"]
-    },
-    {
-      id: 5,
-      title: "事業再構築補助金",
-      description: "ポストコロナ・ウィズコロナ時代の経済社会の変化に対応するための企業の思い切った事業再構築を支援",
-      amount: "最大1億円",
-      deadline: "2025-08-31",
-      difficulty: "hard",
-      requiredIndustry: null, // 全業種対応
-      maxEmployees: 200,
-      maxAnnualRevenue: 500000000, // 5億円以下
-      minBusinessAge: 3, // 創業3年以上
-      limitedPrefectures: [], // 全国対象
-      applicationSupport: true,
-      applicationUrl: "https://example.com/subsidy/5",
-      tags: ["事業再構築", "業態転換", "新分野展開"]
-    },
-    {
-      id: 6,
-      title: "省エネ設備投資補助金",
-      description: "省エネルギー設備への更新を支援",
-      amount: "最大5,000万円",
+      id: 101,
+      type: 'personal',
+      title: "子育て世帯応援給付金",
+      description: "子育て世帯の生活を支援するための給付金",
+      amount: "子ども1人あたり10万円",
       deadline: "2025-09-30",
-      difficulty: "medium",
-      requiredIndustry: "製造業",
-      maxEmployees: 300,
-      maxAnnualRevenue: 300000000, // 3億円以下
-      minBusinessAge: 5, // 創業5年以上
+      difficulty: "easy",
+      requiredChildren: true, // 子どもがいる必要あり
+      childrenAgeLimit: "中学生以下", // 対象の子どもの年齢
       limitedPrefectures: [], // 全国対象
+      applicationSupport: false,
+      applicationUrl: "https://example.com/subsidy/101",
+      tags: ["子育て", "給付金"]
+    },
+    {
+      id: 102,
+      type: 'personal',
+      title: "住宅リフォーム補助金",
+      description: "省エネ・バリアフリーリフォームを対象とした補助金",
+      amount: "工事費の10%（最大30万円）",
+      deadline: "2025-08-15",
+      difficulty: "medium",
+      requiredHousing: ["持ち家（一戸建て）", "持ち家（マンション）"], // 持ち家が必要
+      limitedPrefectures: [], // 全国対象
+      applicationSupport: false,
+      applicationUrl: "https://example.com/subsidy/102",
+      tags: ["住宅", "リフォーム", "省エネ"]
+    },
+    {
+      id: 103,
+      type: 'personal',
+      title: "結婚新生活支援事業",
+      description: "新婚世帯の住居費・引越費用を支援",
+      amount: "最大60万円",
+      deadline: "2025-07-31",
+      difficulty: "easy",
+      ageRequirement: "40代未満", // 年齢制限
+      limitedPrefectures: [], // 全国対象だが自治体により異なる
+      applicationSupport: false,
+      applicationUrl: "https://example.com/subsidy/103",
+      tags: ["結婚", "新生活", "住居費"]
+    },
+    {
+      id: 104,
+      type: 'personal',
+      title: "出産育児一時金",
+      description: "出産にかかる費用を支援する給付金",
+      amount: "子ども1人あたり50万円",
+      deadline: "出産後1年以内",
+      difficulty: "easy",
+      pregnancyRequired: true, // 妊娠中または出産予定
+      limitedPrefectures: [], // 全国対象
+      applicationSupport: false,
+      applicationUrl: "https://example.com/subsidy/104",
+      tags: ["出産", "育児", "給付金"]
+    },
+    {
+      id: 105,
+      type: 'personal',
+      title: "若者マイホーム購入支援事業",
+      description: "35歳未満の若者の住宅取得を支援",
+      amount: "最大100万円",
+      deadline: "2025-12-31",
+      difficulty: "medium",
+      ageRequirement: "35歳未満", // 年齢制限
+      housing: ["賃貸", "実家・その他"], // 現在持ち家でない人向け
+      limitedPrefectures: ["東京都", "神奈川県", "千葉県", "埼玉県"], // 首都圏限定
       applicationSupport: true,
-      applicationUrl: "https://example.com/subsidy/6",
-      tags: ["省エネ", "設備投資", "環境対策"]
+      applicationUrl: "https://example.com/subsidy/105",
+      tags: ["住宅購入", "若者支援"]
     }
   ];

@@ -1,19 +1,32 @@
 'use client';
+import { subsidies } from '../data/subsidies';
 import { useState } from 'react';
 import QuestionnairePage from '../components/ui/QuestionnairePage';
 import SubsidySwiper from '../components/ui/SubsidySwiper';
-import { subsidies } from '../data/subsidies';
 
 export default function Home() {
   const [userProfile, setUserProfile] = useState(null);
   const [filteredSubsidies, setFilteredSubsidies] = useState(null);
   const [showSwiper, setShowSwiper] = useState(false);
+  const [questionnaireCompleted, setQuestionnaireCompleted] = useState(false);
   
-  const handleQuestionnaireComplete = (profile) => {
-    setUserProfile(profile);
-    // プロファイルに基づいて補助金をフィルタリング
-    const filtered = filterSubsidiesByProfile(profile, subsidies);
-    setFilteredSubsidies(filtered);
+  const handleQuestionnaireComplete = (profileType, answers) => {
+    // ユーザープロファイルを設定
+    setUserProfile({
+      type: profileType,
+      ...answers
+    });
+    
+    // テスト段階ではフィルタリングを完全に無効化
+    // すべての補助金を表示するため
+    setFilteredSubsidies(subsidies);
+    
+    console.log("補助金データ:", subsidies); // デバッグ用
+    console.log("フィルタリング後:", subsidies); // デバッグ用
+    
+    // 質問フォームの完了状態を更新
+    setQuestionnaireCompleted(true);
+    // スワイパーを表示
     setShowSwiper(true);
   };
 
@@ -35,36 +48,4 @@ export default function Home() {
       </footer>
     </main>
   );
-}
-
-// 補助金フィルタリング関数
-function filterSubsidiesByProfile(profile, allSubsidies) {
-  // プロファイルデータに基づいてフィルタリングロジックを実装
-  return allSubsidies.filter(subsidy => {
-    // 例: 業種マッチング
-    if (subsidy.requiredIndustry && subsidy.requiredIndustry !== profile.industry) {
-      return false;
-    }
-    // 例: 企業規模マッチング (従業員数)
-    if (subsidy.maxEmployees && profile.employees > subsidy.maxEmployees) {
-      return false;
-    }
-    // 例: 年間売上のマッチング
-    if (subsidy.maxAnnualRevenue && profile.annualRevenue > subsidy.maxAnnualRevenue) {
-      return false;
-    }
-    // 例: 創業年数のマッチング
-    if (subsidy.minBusinessAge && profile.businessAge < subsidy.minBusinessAge) {
-      return false;
-    }
-    // 例: 地域限定の補助金
-    if (subsidy.limitedPrefectures && 
-        subsidy.limitedPrefectures.length > 0 && 
-        !subsidy.limitedPrefectures.includes(profile.prefecture)) {
-      return false;
-    }
-    
-    // 上記の条件をすべて満たす場合、この補助金は該当する
-    return true;
-  });
 }

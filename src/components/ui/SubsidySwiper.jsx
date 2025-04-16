@@ -1,63 +1,193 @@
 'use client';
-import { useState, useEffect } from 'react';
-import SwipeCard from '../SwipeCard';
-import { subsidies } from '../../data/subsidies';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import SwipeCard from '../SwipeCard'; // 正しいパスに修正
 import SubsidyResults from './SubsidyResults';
 
 const SubsidySwiper = ({ filteredSubsidies, userProfile }) => {
-  const [currentSubsidies, setCurrentSubsidies] = useState(filteredSubsidies || subsidies || []);
   const [likedSubsidies, setLikedSubsidies] = useState([]);
-  const [viewedSubsidies, setViewedSubsidies] = useState([]);
-  const [showResults, setShowResults] = useState(false);
-  
-  useEffect(() => {
-    console.log('subsidies data:', currentSubsidies); // データの存在確認
-  }, [currentSubsidies]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [swipingCompleted, setSwipingCompleted] = useState(false);
+  const [direction, setDirection] = useState(null);
 
-  const handleSwipe = (direction, subsidyId) => {
-    // 現在の表示中の補助金から、スワイプされた補助金を削除
-    setCurrentSubsidies(prev => prev.filter(subsidy => subsidy.id !== subsidyId));
-    
-    // スワイプ方向に応じて処理
-    if (direction === 'right') {
-      // 「興味あり」としてライクリストに追加
-      const likedSubsidy = (filteredSubsidies || subsidies).find(subsidy => subsidy.id === subsidyId);
-      setLikedSubsidies(prev => [...prev, likedSubsidy]);
-    }
-    
-    // どの方向でも「見た」リストに追加
-    setViewedSubsidies(prev => [...prev, subsidyId]);
-  };
+  // デバッグ用
+  console.log("SubsidySwiper received:", filteredSubsidies);
 
-  // すべての補助金をスワイプし終わった場合は結果表示
-  if (currentSubsidies.length === 0 || showResults) {
-    return <SubsidyResults likedSubsidies={likedSubsidies} userProfile={userProfile} />;
+  // フィルタリングされた補助金がない場合または undefined/null の場合
+  if (!filteredSubsidies || filteredSubsidies.length === 0) {
+    // テスト段階のためにダミーデータを使用
+    const dummySubsidies = [
+      {
+        id: 'dummy1',
+        title: 'テスト補助金1',
+        description: 'これはテスト用の補助金データです。新規創業や事業拡大を検討している中小企業向けの支援金です。',
+        amount: '最大100万円',
+        eligibility: 'すべての人',
+        deadline: '2025年12月31日',
+        type: 'business'
+      },
+      {
+        id: 'dummy2',
+        title: 'テスト補助金2',
+        description: '別のテスト用補助金データです。テレワークの導入やデジタル化を促進する企業に対する補助金制度になります。',
+        amount: '最大50万円',
+        eligibility: '個人事業主',
+        deadline: '2025年10月15日',
+        type: 'business'
+      },
+      {
+        id: 'dummy3',
+        title: 'テスト補助金3',
+        description: '3つ目のテスト用補助金データです。環境に配慮した設備投資や省エネ対策に取り組む企業向けの支援制度です。',
+        amount: '最大30万円',
+        eligibility: '中小企業',
+        deadline: '2025年9月30日',
+        type: 'business'
+      },
+      {
+        id: 'dummy4',
+        title: 'テスト補助金4',
+        description: '4つ目のテスト用補助金データです。海外展開や輸出促進を目指す企業に対する支援金制度です。',
+        amount: '最大200万円',
+        eligibility: '中小企業',
+        deadline: '2025年11月30日',
+        type: 'business'
+      },
+      {
+        id: 'dummy5',
+        title: 'テスト補助金5',
+        description: '5つ目のテスト用補助金データです。地域活性化や地方創生に貢献する事業に対する補助金制度です。',
+        amount: '最大80万円',
+        eligibility: '法人・個人事業主',
+        deadline: '2025年8月31日',
+        type: 'business'
+      }
+    ];
+
+    // テスト段階ではダミーデータを使用
+    const activeSubsidies = dummySubsidies;
+    
+    const handleSwipe = (dir, subsidy) => {
+      setDirection(dir);
+      
+      if (dir === 'right') {
+        setLikedSubsidies(prev => [...prev, subsidy]);
+      }
+      
+      setTimeout(() => {
+        setCurrentIndex(prev => {
+          const newIndex = prev + 1;
+          if (newIndex >= activeSubsidies.length) {
+            setSwipingCompleted(true);
+          }
+          return newIndex;
+        });
+        setDirection(null);
+      }, 300);
+    };
+    
+    return (
+      <div className="subsidy-swiper-container w-full max-w-md mx-auto">
+        <h2 className="text-xl font-bold mb-4 text-center">テストモード: ダミー補助金</h2>
+        
+        {!swipingCompleted ? (
+          <>
+            <div className="relative h-[550px] w-full">
+              <AnimatePresence>
+                {currentIndex < activeSubsidies.length && (
+                  <SwipeCard 
+                    key={activeSubsidies[currentIndex].id}
+                    subsidy={activeSubsidies[currentIndex]} 
+                    onSwipe={handleSwipe}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+            
+            <div className="flex justify-between mt-6 px-4">
+              <button 
+                className="bg-red-500 text-white rounded-full w-16 h-16 flex items-center justify-center text-3xl shadow-lg hover:bg-red-600 transition-colors"
+                onClick={() => handleSwipe('left', activeSubsidies[currentIndex])}
+              >
+                ✕
+              </button>
+              <button 
+                className="bg-green-500 text-white rounded-full w-16 h-16 flex items-center justify-center text-3xl shadow-lg hover:bg-green-600 transition-colors"
+                onClick={() => handleSwipe('right', activeSubsidies[currentIndex])}
+              >
+                ♥
+              </button>
+            </div>
+            
+            <div className="mt-4 text-center text-gray-500">
+              {currentIndex + 1} / {activeSubsidies.length}
+            </div>
+          </>
+        ) : (
+          <SubsidyResults likedSubsidies={likedSubsidies} />
+        )}
+      </div>
+    );
   }
 
+  // 通常の処理（実際のデータがある場合）
+  const handleSwipe = (dir, subsidy) => {
+    setDirection(dir);
+    
+    if (dir === 'right') {
+      setLikedSubsidies(prev => [...prev, subsidy]);
+    }
+    
+    setTimeout(() => {
+      setCurrentIndex(prev => {
+        const newIndex = prev + 1;
+        if (newIndex >= filteredSubsidies.length) {
+          setSwipingCompleted(true);
+        }
+        return newIndex;
+      });
+      setDirection(null);
+    }, 300);
+  };
+
   return (
-    <div className="flex justify-center items-center h-[70vh] w-full">
-      <div className="relative w-80 h-96">
-        {currentSubsidies.slice(0, 3).map((subsidy, index) => (
-          <div 
-            key={subsidy.id} 
-            className="absolute left-0 top-0"
-            style={{ 
-              zIndex: currentSubsidies.length - index,
-              transform: `scale(${1 - index * 0.05}) translateY(${index * 10}px)`,
-              opacity: index === 0 ? 1 : 0.8 - index * 0.2
-            }}
-          >
-            <SwipeCard subsidy={subsidy} onSwipe={handleSwipe} />
+    <div className="subsidy-swiper-container w-full max-w-md mx-auto">
+      {!swipingCompleted ? (
+        <>
+          <div className="relative h-[550px] w-full">
+            <AnimatePresence>
+              {currentIndex < filteredSubsidies.length && (
+                <SwipeCard 
+                  key={filteredSubsidies[currentIndex].id}
+                  subsidy={filteredSubsidies[currentIndex]} 
+                  onSwipe={handleSwipe}
+                />
+              )}
+            </AnimatePresence>
           </div>
-        ))}
-        
-        {/* 進捗状況 */}
-        <div className="absolute -bottom-10 w-full text-center">
-          <p className="text-xs text-gray-500">
-            {viewedSubsidies.length} / {(filteredSubsidies || subsidies).length} 件チェック済み
-          </p>
-        </div>
-      </div>
+          
+          <div className="flex justify-between mt-6 px-4">
+            <button 
+              className="bg-red-500 text-white rounded-full w-16 h-16 flex items-center justify-center text-3xl shadow-lg hover:bg-red-600 transition-colors"
+              onClick={() => handleSwipe('left', filteredSubsidies[currentIndex])}
+            >
+              ✕
+            </button>
+            <button 
+              className="bg-green-500 text-white rounded-full w-16 h-16 flex items-center justify-center text-3xl shadow-lg hover:bg-green-600 transition-colors"
+              onClick={() => handleSwipe('right', filteredSubsidies[currentIndex])}
+            >
+              ♥
+            </button>
+          </div>
+          
+          <div className="mt-4 text-center text-gray-500">
+            {currentIndex + 1} / {filteredSubsidies.length}
+          </div>
+        </>
+      ) : (
+        <SubsidyResults likedSubsidies={likedSubsidies} />
+      )}
     </div>
   );
 };
